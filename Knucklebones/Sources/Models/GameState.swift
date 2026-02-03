@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Enums
 
@@ -93,6 +94,10 @@ class GameState {
     func rollDice() {
         guard !isRolling && currentDice == nil && !gameOver else { return }
 
+        // Haptic Feedback beim Würfeln
+        let impact = UIImpactFeedbackGenerator(style: .medium)
+        impact.impactOccurred()
+
         isRolling = true
         let finalValue = Int.random(in: 1...6)
 
@@ -119,6 +124,10 @@ class GameState {
               let dice = currentDice,
               !gameOver,
               isColumnAvailable(column, for: true) else { return }
+
+        // Haptic Feedback beim Platzieren
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
 
         // Würfel platzieren
         placeInGrid(column: column, value: dice, isPlayer: true)

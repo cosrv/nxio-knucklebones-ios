@@ -46,6 +46,8 @@ struct ColumnView: View {
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(.secondary)
             .frame(height: 20)
+            .contentTransition(.numericText())
+            .animation(.spring(response: 0.3), value: score)
     }
 }
 
@@ -60,9 +62,13 @@ struct SlotView: View {
 
             if let value = value {
                 DiceView(value: value, size: 40)
-                    .transition(.scale.combined(with: .opacity))
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.5).combined(with: .opacity),
+                        removal: .scale(scale: 1.2).combined(with: .opacity)
+                    ))
             }
         }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: value)
     }
 }
 

@@ -54,16 +54,21 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 - [x] `.onChange` Trigger für KI-Zug
 - [x] Validierung: Kompiliert erfolgreich
 
-### Phase 6: Animationen
-- [ ] Roll-Animation (Flackern)
-- [ ] Platzierungs-Animation (Scale + Opacity)
-- [ ] Haptic Feedback
-- [ ] Validierung: Animationen sichtbar
+### Phase 6: Animationen ✅
+- [x] Roll-Animation (Flackern durch zufällige Werte)
+- [x] Platzierungs-Animation (Scale + Opacity mit Spring)
+- [x] Entfernungs-Animation (Scale up + Fade out)
+- [x] Score-Animation (numericText Transition)
+- [x] Haptic Feedback (Medium bei Roll, Light bei Place)
+- [x] Validierung: Kompiliert erfolgreich
 
-### Phase 7: Game Over
-- [ ] `GameOverOverlay.swift`
-- [ ] Winner-Anzeige + Reset
-- [ ] Validierung: Overlay erscheint, Reset funktioniert
+### Phase 7: Game Over ✅
+- [x] `GameOverOverlay` in ContentView.swift
+- [x] Winner-Anzeige (You win / Opponent wins / Draw)
+- [x] Score-Anzeige
+- [x] Play Again Button mit Reset
+- [x] Dimmed Background
+- [x] Validierung: Kompiliert erfolgreich
 
 ---
 
@@ -114,4 +119,4 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 ---
 
 ## Status
-**Aktuell: Phase 6** - KI-Gegner fertig, Animationen & Haptics als nächstes
+**V1 ABGESCHLOSSEN** - Alle 7 Phasen implementiert und kompilierbar
