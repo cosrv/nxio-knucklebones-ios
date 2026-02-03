@@ -203,4 +203,160 @@ class GameState {
     func getAvailableColumns(for isPlayer: Bool) -> [Int] {
         (0..<3).filter { isColumnAvailable($0, for: isPlayer) }
     }
+
+    // MARK: - KI-Gegner
+
+    /// Führt den KI-Zug aus
+    func performAITurn() {
+        guard !isPlayerTurn && !gameOver else { return }
+
+        // Verzögerung vor dem Würfeln
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.rollAIDice()
+        }
+    }
+
+    /// KI würfelt
+    private func rollAIDice() {
+        guard !gameOver else { return }
+
+        isRolling = true
+        let finalValue = Int.random(in: 1...6)
+
+        // Roll-Animation
+        let iterations = Int.random(in: 8...12)
+
+        for i in 0..<iterations {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.05) {
+                self.displayDice = Int.random(in: 1...6)
+            }
+        }
+
+        // Finaler Wert und Platzierung
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double(iterations) * 0.05 + 0.1) {
+            self.displayDice = finalValue
+            self.currentDice = finalValue
+            self.isRolling = false
+
+            // Verzögerung vor dem Platzieren
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                self.placeAIDice(value: finalValue)
+            }
+        }
+    }
+
+    /// KI platziert den Würfel
+    private func placeAIDice(value: Int) {
+        guard !gameOver else { return }
+
+        let column = chooseBestColumn(for: value)
+
+        // Würfel platzieren
+        placeInGrid(column: column, value: value, isPlayer: false)
+
+        // Spieler-Würfel entfernen
+        removeMatchingDice(column: column, value: value, fromPlayerGrid: true)
+
+        // Würfel zurücksetzen
+        currentDice = nil
+        displayDice = nil
+
+        // Spielende prüfen
+        if checkGameOver() {
+            return
+        }
+
+        // Zug wechseln
+        isPlayerTurn = true
+    }
+
+    /// Wählt die beste Spalte basierend auf Schwierigkeitsgrad
+    private func chooseBestColumn(for dice: Int) -> Int {
+        let available = getAvailableColumns(for: false)
+        guard !available.isEmpty else { return 0 }
+
+        switch difficulty {
+        case .easy:
+            return chooseRandomColumn(available: available)
+        case .medium:
+            return chooseMediumColumn(available: available, dice: dice)
+        case .hard:
+            return chooseHardColumn(available: available, dice: dice)
+        }
+    }
+
+    /// Easy: Zufällige Spalte
+    private func chooseRandomColumn(available: [Int]) -> Int {
+        available.randomElement() ?? 0
+    }
+
+    /// Medium: Basis-Strategie (Stacking + Zerstörung)
+    private func chooseMediumColumn(available: [Int], dice: Int) -> Int {
+        var bestCol = available[0]
+        var bestScore = Int.min
+
+        for col in available {
+            var score = 0
+
+            // Bonus für Stacking (gleiche Würfel in eigener Spalte)
+            let existingCount = opponentGrid[col].compactMap { $0 }.filter { $0 == dice }.count
+            score += existingCount * 10
+
+            // Bonus für Zerstörung (gleiche Würfel beim Spieler entfernen)
+            let destroyCount = playerGrid[col].compactMap { $0 }.filter { $0 == dice }.count
+            score += destroyCount * dice * 5
+
+            if score > bestScore {
+                bestScore = score
+                bestCol = col
+            }
+        }
+
+        return bestCol
+    }
+
+    /// Hard: Erweiterte Strategie
+    private func chooseHardColumn(available: [Int], dice: Int) -> Int {
+        var bestCol = available[0]
+        var bestScore = Int.min
+
+        for col in available {
+            var score = 0
+
+            // Bonus für Stacking (noch stärker gewichtet)
+            let existingCount = opponentGrid[col].compactMap { $0 }.filter { $0 == dice }.count
+            score += existingCount * 15
+
+            // Bonus für Zerstörung
+            let destroyCount = playerGrid[col].compactMap { $0 }.filter { $0 == dice }.count
+            let destroyValue = playerGrid[col].compactMap { $0 }.filter { $0 == dice }.reduce(0, +)
+            score += destroyCount * destroyValue * 3
+
+            // Bonus für hohe Stacks beim Spieler zerstören
+            let playerStackSize = playerGrid[col].compactMap { $0 }.count
+            if destroyCount > 0 && playerStackSize >= 2 {
+                score += 20
+            }
+
+            // Bonus für Spalten die fast voll sind (Spiel schneller beenden wenn vorne)
+            let ownFillLevel = opponentGrid[col].compactMap { $0 }.count
+            if opponentScore > playerScore && ownFillLevel == 2 {
+                score += 10
+            }
+
+            // Malus: Vermeide Spalten wo Spieler uns zerstören könnte
+            let vulnerableCount = playerGrid[col].compactMap { $0 }.filter { $0 == dice }.count
+            if vulnerableCount == 0 {
+                // Spieler hat keine passenden Würfel, gut für uns
+                score += 5
+            }
+
+            if score > bestScore {
+                bestScore = score
+                bestCol = col
+            }
+        }
+
+        return bestCol
+    }
 }

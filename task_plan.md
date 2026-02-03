@@ -42,12 +42,17 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 - [x] `RulesFooter` - Spielregeln
 - [x] Validierung: Kompiliert erfolgreich
 
-### Phase 5: KI-Gegner
-- [ ] `performAITurn()` - Automatischer Zug
-- [ ] `chooseBestColumn()` - Strategie (Stacking + Zerstörung)
-- [ ] `AIDifficulty` enum (Easy/Medium/Hard)
-- [ ] Schwierigkeits-Auswahl im UI
-- [ ] Validierung: KI macht automatisch Züge, Schwierigkeit beeinflusst Verhalten
+### Phase 5: KI-Gegner ✅
+- [x] `performAITurn()` - Automatischer Zug mit Verzögerung
+- [x] `rollAIDice()` - KI würfelt mit Animation
+- [x] `placeAIDice()` - KI platziert Würfel
+- [x] `chooseBestColumn()` - Strategie je nach Schwierigkeit
+- [x] Easy: Zufällige Spalte
+- [x] Medium: Stacking + Zerstörung
+- [x] Hard: Erweiterte Strategie (Stack-Zerstörung, Vorausschau)
+- [x] Schwierigkeits-Auswahl im UI (vor Spielstart)
+- [x] `.onChange` Trigger für KI-Zug
+- [x] Validierung: Kompiliert erfolgreich
 
 ### Phase 6: Animationen
 - [ ] Roll-Animation (Flackern)
@@ -109,4 +114,4 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 ---
 
 ## Status
-**Aktuell: Phase 5** - Spiellogik & UI fertig, KI-Gegner als nächstes
+**Aktuell: Phase 6** - KI-Gegner fertig, Animationen & Haptics als nächstes

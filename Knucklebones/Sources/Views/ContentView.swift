@@ -83,6 +83,12 @@ struct ContentView: View {
                 )
             }
         }
+        .onChange(of: game.isPlayerTurn) { _, isPlayerTurn in
+            // KI-Zug triggern wenn Spieler fertig ist
+            if !isPlayerTurn && !game.gameOver {
+                game.performAITurn()
+            }
+        }
     }
 
     /// Prüft ob das Spiel bereits begonnen hat
