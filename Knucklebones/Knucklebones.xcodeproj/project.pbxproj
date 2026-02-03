@@ -3,12 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		2BD6B3AC81EDC258CC096FC6 /* ColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75060C46F0F0FC28732DDDB7 /* ColumnView.swift */; };
 		47AAD764B32AD9F59DC744A5 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6943B729F546511D6EDFF8EC /* GameState.swift */; };
+		91FC20FDDA2198C7FB2FBF16 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5E765AEDC5F06A7BB472B881 /* Assets.xcassets */; };
 		943C96D6651676D08E506E7C /* GridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA8E75DC27BDD0D5508DBC7 /* GridView.swift */; };
 		99A7B2DE9A1BEB26037A6F9A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9694EA5D5122814D9686DC7C /* ContentView.swift */; };
 		CEDBDDE07D5131DF79388C10 /* DiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35EC23FCB48547F60E7737D3 /* DiceView.swift */; };
@@ -17,7 +18,8 @@
 
 /* Begin PBXFileReference section */
 		35EC23FCB48547F60E7737D3 /* DiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceView.swift; sourceTree = "<group>"; };
-		5640C71759DB39C0777A2DEF /* Knucklebones.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Knucklebones.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5640C71759DB39C0777A2DEF /* Knucklebones.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Knucklebones.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5E765AEDC5F06A7BB472B881 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6943B729F546511D6EDFF8EC /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
 		75060C46F0F0FC28732DDDB7 /* ColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnView.swift; sourceTree = "<group>"; };
 		9694EA5D5122814D9686DC7C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -48,6 +50,7 @@
 		730F627764E13D30FF8C47B6 = {
 			isa = PBXGroup;
 			children = (
+				A99D373B4C0B23E3016DD52D /* Resources */,
 				8D1E77DDB4FC16331778C942 /* Sources */,
 				CCFFADC96848E8897734A8FA /* Products */,
 			);
@@ -61,6 +64,14 @@
 				026B940A77F26755A84D091C /* Views */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		A99D373B4C0B23E3016DD52D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				5E765AEDC5F06A7BB472B881 /* Assets.xcassets */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		CCFFADC96848E8897734A8FA /* Products */ = {
@@ -79,6 +90,7 @@
 			buildConfigurationList = 3591A1D38A557242AE17993E /* Build configuration list for PBXNativeTarget "Knucklebones" */;
 			buildPhases = (
 				B313A685EA6CC0432180BBB6 /* Sources */,
+				A30C56CA7D9C9090FAC0B051 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -99,6 +111,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					181D6D54F398CB99873136A7 = {
+						DevelopmentTeam = "";
+					};
+				};
 			};
 			buildConfigurationList = 288237934B1CCBFB01938A27 /* Build configuration list for PBXProject "Knucklebones" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -110,6 +127,7 @@
 			);
 			mainGroup = 730F627764E13D30FF8C47B6;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -117,6 +135,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A30C56CA7D9C9090FAC0B051 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				91FC20FDDA2198C7FB2FBF16 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B313A685EA6CC0432180BBB6 /* Sources */ = {
@@ -140,8 +169,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = UXTAYARV48;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedFile;
 				INFOPLIST_KEY_CFBundleDisplayName = Knucklebones;
@@ -231,8 +260,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = UXTAYARV48;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedFile;
 				INFOPLIST_KEY_CFBundleDisplayName = Knucklebones;
