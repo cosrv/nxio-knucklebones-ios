@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import Security
 
 // MARK: - Enums
 
@@ -11,6 +12,13 @@ enum AIDifficulty: String, CaseIterable {
     case easy = "Easy"
     case medium = "Medium"
     case hard = "Hard"
+}
+
+enum GamePhase {
+    case coinFlip      // Münzwurf um zu entscheiden wer beginnt
+    case flipping      // Münzwurf-Animation läuft
+    case playing       // Normales Spiel
+    case gameOver      // Spiel beendet
 }
 
 // MARK: - GameState
@@ -29,6 +37,10 @@ class GameState {
     var isRolling: Bool = false
     var gameOver: Bool = false
     var winner: Winner? = nil
+
+    // Coin Flip
+    var gamePhase: GamePhase = .coinFlip
+    var coinFlipResult: Bool? = nil  // true = Spieler beginnt
 
     // Einstellungen
     var difficulty: AIDifficulty = .medium
@@ -59,6 +71,86 @@ class GameState {
         isRolling = false
         gameOver = false
         winner = nil
+        gamePhase = .coinFlip
+        coinFlipResult = nil
+    }
+
+    // MARK: - Crypto Random
+
+    /// Kryptographisch sicherer Zufallswert 1-6
+    private func cryptoRandomDice() -> Int {
+        var randomBytes = [UInt8](repeating: 0, count: 1)
+        let result = SecRandomCopyBytes(kSecRandomDefault, 1, &randomBytes)
+
+        if result == errSecSuccess {
+            // Modulo-Bias vermeiden durch Rejection Sampling
+            let maxUnbiased = UInt8(252) // 252 ist das größte Vielfache von 6 unter 256
+            var value = randomBytes[0]
+
+            while value >= maxUnbiased {
+                _ = SecRandomCopyBytes(kSecRandomDefault, 1, &randomBytes)
+                value = randomBytes[0]
+            }
+
+            return Int(value % 6) + 1
+        }
+
+        // Fallback auf Standard-Random
+        return Int.random(in: 1...6)
+    }
+
+    /// Kryptographisch sicherer Coin-Flip
+    private func cryptoRandomBool() -> Bool {
+        var randomByte: UInt8 = 0
+        let result = SecRandomCopyBytes(kSecRandomDefault, 1, &randomByte)
+
+        if result == errSecSuccess {
+            return randomByte % 2 == 0
+        }
+
+        return Bool.random()
+    }
+
+    // MARK: - Coin Flip
+
+    func performCoinFlip() {
+        guard gamePhase == .coinFlip else { return }
+
+        gamePhase = .flipping
+
+        // Haptic Feedback
+        let impact = UIImpactFeedbackGenerator(style: .medium)
+        impact.impactOccurred()
+
+        // Animation: Mehrere "Flips"
+        let totalDuration: Double = 1.2
+        let flips = 8
+
+        for i in 0..<flips {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * (totalDuration / Double(flips))) {
+                self.coinFlipResult = Bool.random()
+            }
+        }
+
+        // Finales Ergebnis
+        DispatchQueue.main.asyncAfter(deadline: .now() + totalDuration) {
+            self.coinFlipResult = self.cryptoRandomBool()
+            self.isPlayerTurn = self.coinFlipResult!
+
+            // Haptic Feedback für Ergebnis
+            let resultImpact = UINotificationFeedbackGenerator()
+            resultImpact.notificationOccurred(self.coinFlipResult! ? .success : .warning)
+
+            // Kurze Pause, dann Spiel starten
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.gamePhase = .playing
+
+                // Wenn KI beginnt, automatisch starten
+                if !self.isPlayerTurn {
+                    self.performAITurn()
+                }
+            }
+        }
     }
 
     // MARK: - Score-Berechnung
@@ -90,37 +182,38 @@ class GameState {
 
     // MARK: - Spiellogik
 
-    /// Würfelt einen neuen Würfel (1-6)
+    /// Würfelt einen neuen Würfel (1-6) mit kryptographischer Entropy
     func rollDice() {
-        guard !isRolling && currentDice == nil && !gameOver else { return }
+        guard !isRolling && currentDice == nil && !gameOver && gamePhase == .playing else { return }
 
         // Haptic Feedback beim Start
         let startImpact = UIImpactFeedbackGenerator(style: .medium)
         startImpact.impactOccurred()
 
         isRolling = true
-        let finalValue = Int.random(in: 1...6)
+
+        // Kryptographisch sicherer Zufallswert für das Endergebnis
+        let finalValue = cryptoRandomDice()
 
         // Roll-Animation: Schnell am Anfang, langsamer am Ende (Easing)
-        let totalDuration: Double = 0.8
-        let iterations = 12
+        let totalDuration: Double = 0.9
+        let iterations = 14
         var delays: [Double] = []
 
-        // Easing-Funktion: Quadratisch langsamer werden
+        // Cubic Easing für natürlicheres Abbremsen
         for i in 0..<iterations {
             let progress = Double(i) / Double(iterations)
-            let easedProgress = progress * progress // Quadratisches Easing
+            let easedProgress = progress * progress * progress
             delays.append(easedProgress * totalDuration)
         }
 
-        // Zufällige Werte während der Animation
+        // Zufällige Werte während der Animation (auch crypto-random)
         for (index, delay) in delays.enumerated() {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                // Letzter Wert ist der finale Wert
                 if index == iterations - 1 {
                     self.displayDice = finalValue
                 } else {
-                    self.displayDice = Int.random(in: 1...6)
+                    self.displayDice = self.cryptoRandomDice()
                 }
             }
         }
@@ -243,21 +336,21 @@ class GameState {
         }
     }
 
-    /// KI würfelt
+    /// KI würfelt mit kryptographischer Entropy
     private func rollAIDice() {
-        guard !gameOver else { return }
+        guard !gameOver && gamePhase == .playing else { return }
 
         isRolling = true
-        let finalValue = Int.random(in: 1...6)
+        let finalValue = cryptoRandomDice()
 
         // Roll-Animation: Schnell am Anfang, langsamer am Ende
-        let totalDuration: Double = 0.7
-        let iterations = 10
+        let totalDuration: Double = 0.8
+        let iterations = 12
         var delays: [Double] = []
 
         for i in 0..<iterations {
             let progress = Double(i) / Double(iterations)
-            let easedProgress = progress * progress
+            let easedProgress = progress * progress * progress
             delays.append(easedProgress * totalDuration)
         }
 
@@ -266,7 +359,7 @@ class GameState {
                 if index == iterations - 1 {
                     self.displayDice = finalValue
                 } else {
-                    self.displayDice = Int.random(in: 1...6)
+                    self.displayDice = self.cryptoRandomDice()
                 }
             }
         }
@@ -277,7 +370,7 @@ class GameState {
             self.isRolling = false
 
             // Verzögerung vor dem Platzieren
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 self.placeAIDice(value: finalValue)
             }
         }

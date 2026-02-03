@@ -76,6 +76,13 @@ struct ContentView: View {
             .padding(.vertical, 8)
         }
         .overlay {
+            // Coin Flip Overlay
+            if game.gamePhase == .coinFlip || game.gamePhase == .flipping {
+                CoinFlipOverlay(game: game)
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+            }
+
+            // Game Over Overlay
             if game.gameOver, let winner = game.winner {
                 GameOverOverlay(
                     winner: winner,
@@ -91,8 +98,9 @@ struct ContentView: View {
             }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: game.gameOver)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: game.gamePhase)
         .onChange(of: game.isPlayerTurn) { _, isPlayerTurn in
-            if !isPlayerTurn && !game.gameOver {
+            if !isPlayerTurn && !game.gameOver && game.gamePhase == .playing {
                 game.performAITurn()
             }
         }
@@ -509,6 +517,138 @@ struct ScoreDisplay: View {
             Text(label)
                 .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - Coin Flip Overlay
+
+struct CoinFlipOverlay: View {
+    @Bindable var game: GameState
+    @Environment(\.colorScheme) private var colorScheme
+
+    @State private var rotation: Double = 0
+    @State private var scale: CGFloat = 1.0
+
+    var body: some View {
+        ZStack {
+            // Dimmed Background
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                Text("Who goes first?")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+
+                // Coin
+                ZStack {
+                    // Münze
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: coinColors,
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 120, height: 120)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.3), lineWidth: 3)
+                        )
+                        .shadow(color: Color.black.opacity(0.3), radius: 12, y: 8)
+
+                    // Icon auf der Münze
+                    Image(systemName: coinIcon)
+                        .font(.system(size: 48, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .rotation3DEffect(.degrees(rotation), axis: (x: 1, y: 0, z: 0))
+                .scaleEffect(scale)
+
+                // Status Text
+                if game.gamePhase == .flipping {
+                    Text("Flipping...")
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+                } else if let result = game.coinFlipResult {
+                    Text(result ? "You start!" : "Opponent starts!")
+                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .foregroundStyle(result ? .green : .orange)
+                } else {
+                    // Tap to Flip Button
+                    Button {
+                        startFlipAnimation()
+                        game.performCoinFlip()
+                    } label: {
+                        Text("Tap to Flip")
+                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 32)
+                            .padding(.vertical, 14)
+                            .background {
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.purple, Color.purple.opacity(0.8)],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .shadow(color: Color.purple.opacity(0.4), radius: 8, y: 4)
+                            }
+                    }
+                }
+            }
+            .padding(40)
+            .background {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.ultraThickMaterial)
+                    .shadow(color: Color.black.opacity(0.3), radius: 24, y: 12)
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(Color.white.opacity(colorScheme == .dark ? 0.1 : 0.3), lineWidth: 1)
+            )
+        }
+        .onChange(of: game.coinFlipResult) { _, result in
+            if result != nil && game.gamePhase == .flipping {
+                // Kurzer Bounce bei jedem Flip
+                withAnimation(.spring(response: 0.15, dampingFraction: 0.5)) {
+                    scale = 1.1
+                    rotation += 180
+                }
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.6).delay(0.1)) {
+                    scale = 1.0
+                }
+            }
+        }
+    }
+
+    private var coinColors: [Color] {
+        if let result = game.coinFlipResult, game.gamePhase != .flipping {
+            return result
+                ? [Color.green.opacity(0.8), Color.green]
+                : [Color.orange.opacity(0.8), Color.orange]
+        }
+        return [Color.yellow.opacity(0.8), Color.yellow, Color.orange.opacity(0.8)]
+    }
+
+    private var coinIcon: String {
+        if let result = game.coinFlipResult, game.gamePhase != .flipping {
+            return result ? "person.fill" : "desktopcomputer"
+        }
+        return "questionmark"
+    }
+
+    private func startFlipAnimation() {
+        // Kontinuierliche Rotation während des Flippens
+        withAnimation(.linear(duration: 0.15).repeatForever(autoreverses: false)) {
+            rotation = 360
+        }
+        withAnimation(.easeInOut(duration: 0.1).repeatForever(autoreverses: true)) {
+            scale = 0.95
         }
     }
 }
