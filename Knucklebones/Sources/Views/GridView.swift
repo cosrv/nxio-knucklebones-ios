@@ -7,7 +7,7 @@ struct GridView: View {
     let onColumnTap: (Int) -> Void
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             ForEach(0..<3, id: \.self) { colIndex in
                 ColumnView(
                     cells: grid[colIndex],
@@ -39,7 +39,7 @@ struct GridView: View {
 }
 
 #Preview {
-    VStack(spacing: 32) {
+    VStack(spacing: 40) {
         // Gegner
         GridView(
             grid: [[5, nil, nil], [2, 2, nil], [1, 3, 6]],
@@ -56,5 +56,6 @@ struct GridView: View {
             onColumnTap: { col in print("Tapped column \(col)") }
         )
     }
-    .padding()
+    .padding(24)
+    .background(Color(.systemBackground))
 }

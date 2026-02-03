@@ -5,8 +5,9 @@ struct DiceView: View {
     var size: CGFloat = 40
     var isRolling: Bool = false
 
+    @Environment(\.colorScheme) private var colorScheme
+
     // Dot-Positionen für Werte 1-6 im 3x3 Grid
-    // [row, col] wobei 0,0 = oben links
     private let dotPositions: [Int: [(Int, Int)]] = [
         1: [(1, 1)],
         2: [(0, 2), (2, 0)],
@@ -20,14 +21,52 @@ struct DiceView: View {
         size * 0.18
     }
 
+    private var diceBackground: Color {
+        colorScheme == .dark
+            ? Color(white: 0.2)
+            : Color.white
+    }
+
+    private var dotColor: Color {
+        colorScheme == .dark
+            ? Color.white
+            : Color(white: 0.15)
+    }
+
     var body: some View {
         ZStack {
-            // Würfel-Hintergrund
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(.systemBackground))
+            // Würfel-Hintergrund mit Glaseffekt
+            RoundedRectangle(cornerRadius: size * 0.15)
+                .fill(diceBackground)
+                .shadow(
+                    color: colorScheme == .dark
+                        ? Color.black.opacity(0.5)
+                        : Color.black.opacity(0.15),
+                    radius: size * 0.1,
+                    y: size * 0.05
+                )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(Color(.separator), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: size * 0.15)
+                        .stroke(
+                            colorScheme == .dark
+                                ? Color.white.opacity(0.1)
+                                : Color.black.opacity(0.08),
+                            lineWidth: 0.5
+                        )
+                )
+                // Innerer Glanz
+                .overlay(
+                    RoundedRectangle(cornerRadius: size * 0.15)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(colorScheme == .dark ? 0.1 : 0.4),
+                                    Color.clear
+                                ],
+                                startPoint: .top,
+                                endPoint: .center
+                            )
+                        )
                 )
 
             // Dots Grid
@@ -36,7 +75,14 @@ struct DiceView: View {
                     GridRow {
                         ForEach(0..<3, id: \.self) { col in
                             Circle()
-                                .fill(shouldShowDot(row: row, col: col) ? Color.primary : Color.clear)
+                                .fill(shouldShowDot(row: row, col: col) ? dotColor : Color.clear)
+                                .shadow(
+                                    color: shouldShowDot(row: row, col: col)
+                                        ? dotColor.opacity(0.3)
+                                        : Color.clear,
+                                    radius: 1,
+                                    y: 1
+                                )
                                 .frame(width: dotSize, height: dotSize)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
@@ -46,8 +92,18 @@ struct DiceView: View {
             .padding(size * 0.15)
         }
         .frame(width: size, height: size)
-        .rotationEffect(isRolling ? .degrees(Double(value * 30)) : .zero)
-        .animation(isRolling ? nil : .easeOut(duration: 0.1), value: isRolling)
+        .rotation3DEffect(
+            .degrees(isRolling ? Double(value * 45) : 0),
+            axis: (x: 1, y: 1, z: 0)
+        )
+        .scaleEffect(isRolling ? 0.9 : 1.0)
+        .animation(
+            isRolling
+                ? .easeInOut(duration: 0.08)
+                : .spring(response: 0.3, dampingFraction: 0.6),
+            value: isRolling
+        )
+        .animation(.spring(response: 0.2, dampingFraction: 0.7), value: value)
     }
 
     private func shouldShowDot(row: Int, col: Int) -> Bool {
@@ -57,10 +113,25 @@ struct DiceView: View {
 }
 
 #Preview {
-    HStack(spacing: 12) {
-        ForEach(1...6, id: \.self) { value in
-            DiceView(value: value)
+    VStack(spacing: 24) {
+        // Light Mode Preview
+        HStack(spacing: 12) {
+            ForEach(1...6, id: \.self) { value in
+                DiceView(value: value, size: 50)
+            }
         }
+        .padding()
+        .background(Color(.systemBackground))
+        .environment(\.colorScheme, .light)
+
+        // Dark Mode Preview
+        HStack(spacing: 12) {
+            ForEach(1...6, id: \.self) { value in
+                DiceView(value: value, size: 50)
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .environment(\.colorScheme, .dark)
     }
-    .padding()
 }
