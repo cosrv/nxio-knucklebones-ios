@@ -364,11 +364,6 @@ struct CenterArea: View {
             if let dice = game.displayDice {
                 VStack(spacing: 4) {
                     DiceView(value: dice, size: 56, isRolling: game.isRolling)
-                        .shadow(
-                            color: Color.black.opacity(0.2),
-                            radius: 8,
-                            y: 4
-                        )
 
                     Text("Select column")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
@@ -404,8 +399,6 @@ struct CenterArea: View {
             }
         }
         .frame(height: 76)
-        .animation(.spring(response: 0.3), value: game.displayDice != nil)
-        .animation(.spring(response: 0.3), value: game.isRolling)
     }
 }
 
