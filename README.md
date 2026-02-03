@@ -4,7 +4,7 @@ Native SwiftUI-Implementierung des Würfelspiels Knucklebones (bekannt aus "Cult
 
 ## Status
 
-🚧 **In Planung** - Design-Phase
+🚧 **In Planung** - Design abgeschlossen, Implementierung startet
 
 ## Projektstruktur
 
@@ -35,10 +35,25 @@ nxio-knucklebones-ios/
 - **Zerstörung:** Platzierte Würfel entfernen gleiche Würfel in der gegnerischen Spalte
 - Spiel endet wenn ein Grid voll ist, höchste Punktzahl gewinnt
 
+## Features (V1)
+
+- Light & Dark Mode Support
+- Minimalistisches Würfel-Design
+- KI-Gegner mit 3 Schwierigkeitsgraden (Easy/Medium/Hard)
+- Haptic Feedback (Würfeln, Platzieren)
+- Portrait-Modus optimiert für iPhone
+
+## V2 Roadmap
+
+- Lokaler 2-Spieler-Modus
+- Online Multiplayer (Game Center)
+- Statistiken & Highscores
+
 ## Tech Stack
 
 - **iOS 17+** (für @Observable)
 - **SwiftUI** (100% native)
+- **iPhone-only**, Portrait
 - **Keine externen Dependencies**
 
 ## Referenzen

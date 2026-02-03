@@ -39,7 +39,9 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 ### Phase 5: KI-Gegner
 - [ ] `performAITurn()` - Automatischer Zug
 - [ ] `chooseBestColumn()` - Strategie (Stacking + Zerstörung)
-- [ ] Validierung: KI macht automatisch Züge
+- [ ] `AIDifficulty` enum (Easy/Medium/Hard)
+- [ ] Schwierigkeits-Auswahl im UI
+- [ ] Validierung: KI macht automatisch Züge, Schwierigkeit beeinflusst Verhalten
 
 ### Phase 6: Animationen
 - [ ] Roll-Animation (Flackern)
@@ -54,36 +56,44 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 
 ---
 
-## Offene Design-Fragen
+## Design-Entscheidungen (abgeschlossen)
 
-### 1. Visual Design
-- [ ] Farbschema: Hell (wie React-Prototyp) oder Dark Mode Support?
-- [ ] Dice-Style: Minimalistisch (weiß + schwarze Dots) oder stilisiert?
-- [ ] Grid-Hervorhebung: Grün für klickbar (wie Prototyp) oder andere Farbe?
+### 1. Visual Design ✅
+- [x] **Farbschema:** Light + Dark Mode Support
+- [x] **Dice-Style:** Minimalistisch (weiß/schwarz + Dots)
+- [x] **Grid-Hervorhebung:** Grün für klickbare Spalten (wie Prototyp)
 
-### 2. Layout
-- [ ] Portrait-only oder auch Landscape?
-- [ ] iPad-Support oder nur iPhone?
-- [ ] Safe Area Handling?
+### 2. Layout ✅
+- [x] **Orientierung:** Portrait-only
+- [x] **Geräte:** iPhone-only (kein iPad)
+- [x] Safe Area: Standard iOS Handling
 
-### 3. UX Details
-- [ ] Haptic Feedback bei welchen Aktionen? (Roll, Place, Destroy, GameOver)
-- [ ] Sound-Effekte gewünscht?
-- [ ] Undo-Funktion?
+### 3. UX Details ✅
+- [x] **Haptic Feedback:** Würfeln + Platzieren
+- [x] **Sound-Effekte:** Keine
+- [x] **Undo:** Nein
 
-### 4. KI-Verhalten
-- [ ] Schwierigkeitsgrade (Easy/Medium/Hard)?
-- [ ] KI-Verzögerung anpassbar?
+### 4. KI-Verhalten ✅
+- [x] **Schwierigkeitsgrade:** Ja, wählbar (Easy/Medium/Hard)
 
-### 5. Erweiterungen (später)
-- [ ] Lokaler Multiplayer?
-- [ ] Online Multiplayer (Game Center)?
-- [ ] Statistiken/Highscores?
+### 5. V2 Roadmap (später)
+- [ ] Lokaler 2-Spieler-Modus
+- [ ] Online Multiplayer (Game Center)
+- [ ] Statistiken/Highscores
 
 ---
 
 ## Entscheidungen
-(Werden nach Klärung hier dokumentiert)
+
+| Thema | Entscheidung | Begründung |
+|-------|--------------|------------|
+| Dark Mode | Ja | Systemstandard, bessere UX |
+| Dice-Style | Minimalistisch | Konsistent mit Prototyp |
+| Portrait-only | Ja | Einfacheres Layout |
+| iPhone-only | Ja | Fokus auf Hauptplattform |
+| Haptics | Roll + Place | Taktiles Feedback ohne Überladung |
+| Sound | Nein | Minimalistisch halten |
+| KI-Difficulty | Wählbar | Mehr Spielvariation |
 
 ---
 
@@ -93,4 +103,4 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 ---
 
 ## Status
-**Aktuell: Planungsphase** - Warte auf Design-Entscheidungen
+**Aktuell: Bereit für Phase 1** - Design-Entscheidungen abgeschlossen, Implementierung kann starten

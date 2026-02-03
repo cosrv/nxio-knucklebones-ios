@@ -44,7 +44,7 @@ Wert 5: [0,0], [0,2], [1,1], [2,0], [2,2] (Ecken + Mitte)
 Wert 6: [0,0], [0,2], [1,0], [1,2], [2,0], [2,2] (Links + Rechts)
 ```
 
-### KI-Strategie
+### KI-Strategie (Basis)
 ```
 Für jede verfügbare Spalte:
   score = 0
@@ -55,6 +55,19 @@ Für jede verfügbare Spalte:
 
 Wähle Spalte mit höchstem Score
 ```
+
+### KI-Schwierigkeitsgrade (geplant)
+
+| Stufe | Verhalten |
+|-------|-----------|
+| **Easy** | Zufällige Spalte (keine Strategie) |
+| **Medium** | Basis-Strategie (wie Prototyp) |
+| **Hard** | Erweiterte Strategie: Vorausschau, Blockieren, optimales Stacking |
+
+#### Hard-Mode Erweiterungen
+- Priorisiere Zerstörung von hohen Stacks beim Spieler
+- Vermeide Spalten wo Spieler zerstören könnte
+- Bevorzuge Spalten die fast voll sind (Spiel schneller beenden wenn vorne)
 
 ### Roll-Animation
 - 10-15 zufällige "Flacker"-Werte
@@ -72,14 +85,25 @@ Wähle Spalte mit höchstem Score
 - `UIImpactFeedbackGenerator` für Haptics
 - `DispatchQueue.main.asyncAfter` für Delays
 
-### Farben (aus Prototyp)
+### Farben
+
+#### Light Mode (aus Prototyp)
 - Background: `#fafafa`
 - Text: `#333`
 - Secondary: `#666`
 - Border: `#e0e0e0`, `#ccc`
 - Clickable: `#e8f5e9` (background), `#4caf50` (border)
-- Dice dots: `#333`
+- Dice: Weiß mit schwarzen Dots (`#333`)
 - Button: `#333` background, `#fff` text
+
+#### Dark Mode (adaptiert)
+- Background: System Background (`.background`)
+- Text: `.primary`
+- Secondary: `.secondary`
+- Border: `.separator`
+- Clickable: `Color.green.opacity(0.2)` (background), `Color.green` (border)
+- Dice: Adaptiv (weiß in Light, dunkel in Dark) mit kontrastierenden Dots
+- Button: `.primary` background
 
 ---
 
@@ -87,3 +111,5 @@ Wähle Spalte mit höchstem Score
 - [ ] iOS 17 @Observable Syntax verifizieren
 - [ ] SwiftUI Grid vs LazyVGrid für Dice-Dots
 - [ ] Beste Praxis für Timer/Animation in SwiftUI
+- [ ] @Environment(\.colorScheme) für Dark Mode
+- [ ] @AppStorage für Schwierigkeits-Persistenz
