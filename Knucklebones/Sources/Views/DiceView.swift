@@ -6,10 +6,15 @@ struct DiceView: View {
     var isRolling: Bool = false
 
     @Environment(\.colorScheme) private var colorScheme
+
+    // Animation States
     @State private var rotationX: Double = 0
     @State private var rotationY: Double = 0
     @State private var rotationZ: Double = 0
-    @State private var bounce: CGFloat = 1.0
+    @State private var offsetY: CGFloat = 0
+    @State private var scale: CGFloat = 1.0
+    @State private var shadowRadius: CGFloat = 4
+    @State private var shadowY: CGFloat = 2
 
     // Dot-Positionen für Werte 1-6 im 3x3 Grid
     private let dotPositions: [Int: [(Int, Int)]] = [
@@ -46,8 +51,8 @@ struct DiceView: View {
                     color: colorScheme == .dark
                         ? Color.black.opacity(0.5)
                         : Color.black.opacity(0.15),
-                    radius: isRolling ? size * 0.2 : size * 0.1,
-                    y: isRolling ? size * 0.1 : size * 0.05
+                    radius: shadowRadius,
+                    y: shadowY
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: size * 0.15)
@@ -94,61 +99,125 @@ struct DiceView: View {
                 }
             }
             .padding(size * 0.15)
-            .opacity(isRolling ? 0.7 : 1.0)
+            .opacity(isRolling ? 0.6 : 1.0)
         }
         .frame(width: size, height: size)
-        .scaleEffect(bounce)
-        .rotation3DEffect(.degrees(rotationX), axis: (x: 1, y: 0, z: 0))
-        .rotation3DEffect(.degrees(rotationY), axis: (x: 0, y: 1, z: 0))
+        .scaleEffect(scale)
+        .offset(y: offsetY)
+        .rotation3DEffect(.degrees(rotationX), axis: (x: 1, y: 0, z: 0), perspective: 0.5)
+        .rotation3DEffect(.degrees(rotationY), axis: (x: 0, y: 1, z: 0), perspective: 0.5)
         .rotation3DEffect(.degrees(rotationZ), axis: (x: 0, y: 0, z: 1))
         .onChange(of: isRolling) { _, rolling in
             if rolling {
-                startRollingAnimation()
+                startNaturalRoll()
             } else {
-                stopRollingAnimation()
+                landDice()
             }
         }
         .onChange(of: value) { _, _ in
-            // Kleiner Bounce wenn sich der Wert ändert
+            // Kleiner Pulse wenn sich der Wert ändert (während nicht rollend)
             if !isRolling {
                 withAnimation(.spring(response: 0.15, dampingFraction: 0.5)) {
-                    bounce = 1.1
+                    scale = 1.08
                 }
-                withAnimation(.spring(response: 0.2, dampingFraction: 0.6).delay(0.1)) {
-                    bounce = 1.0
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.6).delay(0.08)) {
+                    scale = 1.0
                 }
             }
         }
     }
 
-    private func startRollingAnimation() {
-        // Kontinuierliche Tumbling-Animation
-        withAnimation(.linear(duration: 0.15).repeatForever(autoreverses: false)) {
+    // MARK: - Natural Roll Animation
+
+    private func startNaturalRoll() {
+        // Phase 1: Hochwerfen (0 - 0.15s)
+        withAnimation(.easeOut(duration: 0.15)) {
+            offsetY = -size * 0.6
+            scale = 0.9
+            shadowRadius = size * 0.3
+            shadowY = size * 0.25
+        }
+
+        // Phase 2: Schnelle Rotation in der Luft (0.15s - 0.7s)
+        withAnimation(.linear(duration: 0.12).repeatForever(autoreverses: false)) {
             rotationX = 360
+        }
+        withAnimation(.linear(duration: 0.15).repeatForever(autoreverses: false)) {
             rotationY = 360
         }
-        withAnimation(.linear(duration: 0.2).repeatForever(autoreverses: false)) {
+        withAnimation(.linear(duration: 0.25).repeatForever(autoreverses: false)) {
             rotationZ = 360
         }
-        // Leichtes Hüpfen
-        withAnimation(.easeInOut(duration: 0.1).repeatForever(autoreverses: true)) {
-            bounce = 0.92
+
+        // Phase 3: Schwebend oben (während Werte wechseln)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                self.offsetY = -size * 0.4
+            }
+        }
+
+        // Phase 4: Oszillation/Wobble während des Rollens
+        for i in 0..<4 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2 + Double(i) * 0.12) {
+                withAnimation(.easeInOut(duration: 0.12)) {
+                    self.offsetY = -size * (0.35 + CGFloat(i % 2) * 0.1)
+                }
+            }
         }
     }
 
-    private func stopRollingAnimation() {
-        // Sanft zurück zur Ausgangsposition
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+    private func landDice() {
+        // Rotation stoppen und auf "saubere" Position bringen
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) {
             rotationX = 0
             rotationY = 0
             rotationZ = 0
         }
-        // Bounce-Landung
-        withAnimation(.spring(response: 0.25, dampingFraction: 0.4)) {
-            bounce = 1.15
+
+        // Phase 1: Runter kommen (Schwerkraft)
+        withAnimation(.easeIn(duration: 0.12)) {
+            offsetY = size * 0.05
+            scale = 1.05
+            shadowRadius = size * 0.05
+            shadowY = size * 0.02
         }
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.5).delay(0.15)) {
-            bounce = 1.0
+
+        // Phase 2: Erster Bounce
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            withAnimation(.easeOut(duration: 0.1)) {
+                self.offsetY = -size * 0.15
+                self.scale = 0.95
+                self.shadowRadius = size * 0.12
+                self.shadowY = size * 0.08
+            }
+        }
+
+        // Phase 3: Zweiter (kleinerer) Aufprall
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+            withAnimation(.easeIn(duration: 0.08)) {
+                self.offsetY = size * 0.02
+                self.scale = 1.02
+                self.shadowRadius = size * 0.04
+                self.shadowY = size * 0.02
+            }
+        }
+
+        // Phase 4: Mini-Bounce
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
+            withAnimation(.easeOut(duration: 0.06)) {
+                self.offsetY = -size * 0.04
+                self.scale = 0.98
+            }
+        }
+
+        // Phase 5: Settle (zur Ruhe kommen)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.36) {
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
+                self.offsetY = 0
+                self.scale = 1.0
+                self.shadowRadius = size * 0.1
+                self.shadowY = size * 0.05
+            }
         }
     }
 
@@ -179,5 +248,9 @@ struct DiceView: View {
         .padding()
         .background(Color(.systemBackground))
         .environment(\.colorScheme, .dark)
+
+        // Rolling Preview
+        DiceView(value: 4, size: 60, isRolling: true)
+            .padding()
     }
 }
