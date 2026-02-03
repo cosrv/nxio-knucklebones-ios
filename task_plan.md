@@ -11,29 +11,31 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 
 ## Phasen
 
-### Phase 1: Projekt-Setup
-- [ ] Xcode-Projekt erstellen (iOS 17+, SwiftUI)
-- [ ] Projektstruktur anlegen (Models/, Views/)
-- [ ] Validierung: Projekt kompiliert
+### Phase 1: Projekt-Setup ✅
+- [x] Xcode-Projekt erstellen (iOS 17+, SwiftUI)
+- [x] Projektstruktur anlegen (Models/, Views/)
+- [x] App-Icons integriert
+- [x] Validierung: Projekt kompiliert
 
-### Phase 2: Datenmodell
-- [ ] `GameState.swift` mit @Observable
-- [ ] Grids, Dice-State, Turn-Management
-- [ ] Validierung: GameState instanziierbar
+### Phase 2: Datenmodell ✅
+- [x] `GameState.swift` mit @Observable
+- [x] Grids, Dice-State, Turn-Management
+- [x] `AIDifficulty` enum
+- [x] Validierung: GameState instanziierbar
 
-### Phase 3: Spiellogik
+### Phase 3: Spiellogik (teilweise)
 - [ ] `rollDice()` - Würfeln mit Zufall
 - [ ] `placeDice(column:)` - Würfel platzieren
-- [ ] `calculateColumnScore()` - Score-Berechnung (Multiplikator-Regel)
+- [x] `calculateColumnScore()` - Score-Berechnung (Multiplikator-Regel)
 - [ ] `removeMatchingDice()` - Gegner-Würfel entfernen
 - [ ] `checkGameOver()` - Spielende prüfen
 - [ ] Validierung: Score-Tests bestehen
 
-### Phase 4: UI-Komponenten
-- [ ] `DiceView.swift` - Würfel-Darstellung (Dots)
-- [ ] `ColumnView.swift` - Spalte mit 3 Slots + Score
-- [ ] `GridView.swift` - 3 Spalten
-- [ ] `ContentView.swift` - Hauptscreen
+### Phase 4: UI-Komponenten (Grundgerüst)
+- [x] `DiceView.swift` - Würfel-Darstellung (Dots)
+- [x] `ColumnView.swift` - Spalte mit 3 Slots + Score
+- [x] `GridView.swift` - 3 Spalten
+- [x] `ContentView.swift` - Hauptscreen (Platzhalter)
 - [ ] Validierung: Grids werden gerendert, Interaktion funktioniert
 
 ### Phase 5: KI-Gegner
@@ -103,4 +105,4 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 ---
 
 ## Status
-**Aktuell: Bereit für Phase 1** - Design-Entscheidungen abgeschlossen, Implementierung kann starten
+**Aktuell: Phase 3/4** - Projekt-Setup und Grundgerüst fertig, Spiellogik und UI-Integration ausstehend

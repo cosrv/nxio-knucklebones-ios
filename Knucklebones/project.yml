@@ -1,0 +1,35 @@
+name: Knucklebones
+options:
+  bundleIdPrefix: com.nxio
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.0"
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+    SWIFT_VERSION: "5.9"
+
+targets:
+  Knucklebones:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    resources:
+      - Resources
+    settings:
+      base:
+        INFOPLIST_GENERATION_MODE: GeneratedFile
+        INFOPLIST_KEY_CFBundleDisplayName: Knucklebones
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UIStatusBarStyle: ""
+        GENERATE_INFOPLIST_FILE: true
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1"  # iPhone only
