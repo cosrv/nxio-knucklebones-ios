@@ -516,133 +516,278 @@ struct ScoreDisplay: View {
 
 // MARK: - Coin Flip Overlay
 
+struct CoinAnimationValues {
+    var offsetY: CGFloat = 0
+    var rotationX: Double = 0
+    var rotationZ: Double = 0
+    var scale: CGFloat = 1.0
+    var shadowRadius: CGFloat = 12
+    var shadowY: CGFloat = 8
+}
+
 struct CoinFlipOverlay: View {
     @Bindable var game: GameState
     @Environment(\.colorScheme) private var colorScheme
 
-    @State private var rotation: Double = 0
-    @State private var scale: CGFloat = 1.0
+    @State private var flipTrigger: Int = 0
+    @State private var showResult: Bool = false
+
+    private let coinSize: CGFloat = 130
 
     var body: some View {
         ZStack {
-            // Dimmed Background
-            Color.black.opacity(0.5)
+            // Dimmed Background mit Blur
+            Color.black.opacity(0.6)
                 .ignoresSafeArea()
 
-            VStack(spacing: 24) {
+            VStack(spacing: 28) {
+                // Titel
                 Text("Who goes first?")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
 
-                // Coin
-                ZStack {
-                    // Münze
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: coinColors,
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                // Münze mit KeyframeAnimator
+                KeyframeAnimator(
+                    initialValue: CoinAnimationValues(),
+                    trigger: flipTrigger
+                ) { values in
+                    coinView
+                        .offset(y: values.offsetY)
+                        .rotation3DEffect(.degrees(values.rotationX), axis: (x: 1, y: 0, z: 0), perspective: 0.4)
+                        .rotation3DEffect(.degrees(values.rotationZ), axis: (x: 0, y: 0, z: 1))
+                        .scaleEffect(values.scale)
+                        .shadow(
+                            color: Color.black.opacity(0.4),
+                            radius: values.shadowRadius,
+                            y: values.shadowY
                         )
-                        .frame(width: 120, height: 120)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.3), lineWidth: 3)
-                        )
-                        .shadow(color: Color.black.opacity(0.3), radius: 12, y: 8)
+                } keyframes: { _ in
+                    // Dezentes Hochwerfen
+                    KeyframeTrack(\.offsetY) {
+                        CubicKeyframe(-25, duration: 0.12)
+                        CubicKeyframe(-35, duration: 0.25)
+                        CubicKeyframe(-30, duration: 0.30)
+                        CubicKeyframe(-20, duration: 0.20)
+                        CubicKeyframe(4, duration: 0.10)
+                        CubicKeyframe(-6, duration: 0.08)
+                        SpringKeyframe(0, duration: 0.15, spring: .snappy)
+                    }
 
-                    // Icon auf der Münze
-                    Image(systemName: coinIcon)
-                        .font(.system(size: 48, weight: .bold))
-                        .foregroundStyle(.white)
+                    // 2 Umdrehungen (720°)
+                    KeyframeTrack(\.rotationX) {
+                        LinearKeyframe(90, duration: 0.12)
+                        LinearKeyframe(270, duration: 0.25)
+                        LinearKeyframe(450, duration: 0.30)
+                        LinearKeyframe(630, duration: 0.20)
+                        CubicKeyframe(700, duration: 0.10)
+                        SpringKeyframe(720, duration: 0.23, spring: .snappy)
+                    }
+
+                    // Minimales Wackeln
+                    KeyframeTrack(\.rotationZ) {
+                        CubicKeyframe(3, duration: 0.20)
+                        CubicKeyframe(-2, duration: 0.35)
+                        CubicKeyframe(1, duration: 0.30)
+                        SpringKeyframe(0, duration: 0.15, spring: .snappy)
+                    }
+
+                    // Subtile Skalierung
+                    KeyframeTrack(\.scale) {
+                        CubicKeyframe(0.92, duration: 0.10)
+                        CubicKeyframe(1.02, duration: 0.55)
+                        CubicKeyframe(1.04, duration: 0.10)
+                        CubicKeyframe(0.97, duration: 0.08)
+                        SpringKeyframe(1.0, duration: 0.17, spring: .bouncy)
+                    }
+
+                    // Schatten folgt der Höhe
+                    KeyframeTrack(\.shadowRadius) {
+                        CubicKeyframe(16, duration: 0.12)
+                        CubicKeyframe(20, duration: 0.55)
+                        CubicKeyframe(8, duration: 0.10)
+                        CubicKeyframe(14, duration: 0.08)
+                        SpringKeyframe(12, duration: 0.15, spring: .snappy)
+                    }
+
+                    KeyframeTrack(\.shadowY) {
+                        CubicKeyframe(12, duration: 0.12)
+                        CubicKeyframe(16, duration: 0.55)
+                        CubicKeyframe(5, duration: 0.10)
+                        CubicKeyframe(10, duration: 0.08)
+                        SpringKeyframe(8, duration: 0.15, spring: .snappy)
+                    }
                 }
-                .rotation3DEffect(.degrees(rotation), axis: (x: 1, y: 0, z: 0))
-                .scaleEffect(scale)
+                .frame(height: coinSize + 60)
 
                 // Status Text
-                if game.gamePhase == .flipping {
-                    Text("Flipping...")
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
-                } else if let result = game.coinFlipResult {
-                    Text(result ? "You start!" : "Opponent starts!")
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        .foregroundStyle(result ? .green : .orange)
-                } else {
-                    // Tap to Flip Button
-                    Button {
-                        startFlipAnimation()
-                        game.performCoinFlip()
-                    } label: {
-                        Text("Tap to Flip")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                Group {
+                    if game.gamePhase == .flipping && !showResult {
+                        Text("Flipping...")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    } else if showResult, let result = game.coinFlipResult {
+                        VStack(spacing: 8) {
+                            Text(result ? "You start!" : "Opponent starts!")
+                                .font(.system(size: 22, weight: .bold, design: .rounded))
+                                .foregroundStyle(result ? .green : .orange)
+
+                            Text(result ? "Good luck!" : "Watch and learn...")
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                    } else {
+                        // Tap to Flip Button
+                        Button {
+                            flipTrigger += 1
+                            game.performCoinFlip()
+
+                            // Result nach Animation zeigen
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                    showResult = true
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "hand.tap.fill")
+                                    .font(.system(size: 18))
+                                Text("Tap to Flip")
+                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            }
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 32)
-                            .padding(.vertical, 14)
+                            .padding(.horizontal, 36)
+                            .padding(.vertical, 16)
                             .background {
                                 Capsule()
                                     .fill(
                                         LinearGradient(
-                                            colors: [Color.purple, Color.purple.opacity(0.8)],
+                                            colors: [Color(red: 0.95, green: 0.75, blue: 0.2), Color(red: 0.85, green: 0.55, blue: 0.1)],
                                             startPoint: .top,
                                             endPoint: .bottom
                                         )
                                     )
-                                    .shadow(color: Color.purple.opacity(0.4), radius: 8, y: 4)
+                                    .shadow(color: Color.orange.opacity(0.5), radius: 12, y: 6)
                             }
+                        }
+                        .scaleEffect(game.gamePhase == .coinFlip ? 1.0 : 0.9)
+                        .opacity(game.gamePhase == .coinFlip ? 1.0 : 0.5)
+                        .disabled(game.gamePhase != .coinFlip)
                     }
                 }
+                .frame(height: 60)
+                .animation(.spring(response: 0.3), value: showResult)
             }
-            .padding(40)
+            .padding(.horizontal, 44)
+            .padding(.vertical, 36)
             .background {
-                RoundedRectangle(cornerRadius: 24)
+                RoundedRectangle(cornerRadius: 28)
                     .fill(.ultraThickMaterial)
-                    .shadow(color: Color.black.opacity(0.3), radius: 24, y: 12)
+                    .shadow(color: Color.black.opacity(0.4), radius: 30, y: 15)
             }
             .overlay(
-                RoundedRectangle(cornerRadius: 24)
-                    .stroke(Color.white.opacity(colorScheme == .dark ? 0.1 : 0.3), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 28)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.3), Color.white.opacity(0.1)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
             )
         }
-        .onChange(of: game.coinFlipResult) { _, result in
-            if result != nil && game.gamePhase == .flipping {
-                // Kurzer Bounce bei jedem Flip
-                withAnimation(.spring(response: 0.15, dampingFraction: 0.5)) {
-                    scale = 1.1
-                    rotation += 180
-                }
-                withAnimation(.spring(response: 0.2, dampingFraction: 0.6).delay(0.1)) {
-                    scale = 1.0
+    }
+
+    // MARK: - Coin View
+
+    private var coinView: some View {
+        ZStack {
+            // Münzen-Basis (Gold-Metallic)
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: resultColors,
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: coinSize / 2
+                    )
+                )
+                .frame(width: coinSize, height: coinSize)
+                .overlay(
+                    // Äußerer Ring
+                    Circle()
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.6), Color.white.opacity(0.1), Color.white.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 4
+                        )
+                )
+                .overlay(
+                    // Innerer Glanz
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.white.opacity(0.4), Color.clear],
+                                center: UnitPoint(x: 0.3, y: 0.3),
+                                startRadius: 0,
+                                endRadius: coinSize / 2
+                            )
+                        )
+                )
+                .overlay(
+                    // Geprägter Rand-Effekt
+                    Circle()
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [Color.black.opacity(0.3), Color.clear, Color.white.opacity(0.2)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 2
+                        )
+                        .padding(6)
+                )
+
+            // Icon
+            VStack(spacing: 4) {
+                Image(systemName: coinIcon)
+                    .font(.system(size: 42, weight: .bold))
+                    .foregroundStyle(.white)
+                    .shadow(color: Color.black.opacity(0.3), radius: 2, y: 2)
+
+                if showResult {
+                    Text(game.coinFlipResult == true ? "YOU" : "CPU")
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .shadow(color: Color.black.opacity(0.3), radius: 1, y: 1)
                 }
             }
         }
     }
 
-    private var coinColors: [Color] {
-        if let result = game.coinFlipResult, game.gamePhase != .flipping {
+    private var resultColors: [Color] {
+        if showResult, let result = game.coinFlipResult {
             return result
-                ? [Color.green.opacity(0.8), Color.green]
-                : [Color.orange.opacity(0.8), Color.orange]
+                ? [Color.green.opacity(0.9), Color.green, Color(red: 0.1, green: 0.5, blue: 0.2)]
+                : [Color.orange.opacity(0.9), Color.orange, Color(red: 0.7, green: 0.3, blue: 0.1)]
         }
-        return [Color.yellow.opacity(0.8), Color.yellow, Color.orange.opacity(0.8)]
+        // Gold-Metallic
+        return [
+            Color(red: 1.0, green: 0.85, blue: 0.4),
+            Color(red: 0.95, green: 0.75, blue: 0.2),
+            Color(red: 0.8, green: 0.55, blue: 0.1)
+        ]
     }
 
     private var coinIcon: String {
-        if let result = game.coinFlipResult, game.gamePhase != .flipping {
+        if showResult, let result = game.coinFlipResult {
             return result ? "person.fill" : "desktopcomputer"
         }
         return "questionmark"
-    }
-
-    private func startFlipAnimation() {
-        // Kontinuierliche Rotation während des Flippens
-        withAnimation(.linear(duration: 0.15).repeatForever(autoreverses: false)) {
-            rotation = 360
-        }
-        withAnimation(.easeInOut(duration: 0.1).repeatForever(autoreverses: true)) {
-            scale = 0.95
-        }
     }
 }
 
