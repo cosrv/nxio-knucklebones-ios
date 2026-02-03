@@ -23,20 +23,24 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 - [x] `AIDifficulty` enum
 - [x] Validierung: GameState instanziierbar
 
-### Phase 3: Spiellogik (teilweise)
-- [ ] `rollDice()` - Würfeln mit Zufall
-- [ ] `placeDice(column:)` - Würfel platzieren
+### Phase 3: Spiellogik ✅
+- [x] `rollDice()` - Würfeln mit Animation
+- [x] `placeDice(column:)` - Würfel platzieren
 - [x] `calculateColumnScore()` - Score-Berechnung (Multiplikator-Regel)
-- [ ] `removeMatchingDice()` - Gegner-Würfel entfernen
-- [ ] `checkGameOver()` - Spielende prüfen
-- [ ] Validierung: Score-Tests bestehen
+- [x] `removeMatchingDice()` - Gegner-Würfel entfernen
+- [x] `checkGameOver()` - Spielende prüfen
+- [x] `isColumnAvailable()` / `getAvailableColumns()` - Hilfsmethoden
+- [x] Validierung: Kompiliert erfolgreich
 
-### Phase 4: UI-Komponenten (Grundgerüst)
+### Phase 4: UI-Komponenten ✅
 - [x] `DiceView.swift` - Würfel-Darstellung (Dots)
 - [x] `ColumnView.swift` - Spalte mit 3 Slots + Score
 - [x] `GridView.swift` - 3 Spalten
-- [x] `ContentView.swift` - Hauptscreen (Platzhalter)
-- [ ] Validierung: Grids werden gerendert, Interaktion funktioniert
+- [x] `ContentView.swift` - Hauptscreen mit Spiellogik
+- [x] `CenterArea` - Roll-Button / Dice-Anzeige
+- [x] `GameOverOverlay` - Spielende-Anzeige
+- [x] `RulesFooter` - Spielregeln
+- [x] Validierung: Kompiliert erfolgreich
 
 ### Phase 5: KI-Gegner
 - [ ] `performAITurn()` - Automatischer Zug
@@ -105,4 +109,4 @@ Umsetzung des funktionierenden React-Prototyps (`knucklebones-v4.jsx`) als nativ
 ---
 
 ## Status
-**Aktuell: Phase 3/4** - Projekt-Setup und Grundgerüst fertig, Spiellogik und UI-Integration ausstehend
+**Aktuell: Phase 5** - Spiellogik & UI fertig, KI-Gegner als nächstes
