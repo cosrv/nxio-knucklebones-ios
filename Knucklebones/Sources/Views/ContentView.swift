@@ -196,53 +196,54 @@ struct CenterArea: View {
 
     @ViewBuilder
     private var centerContent: some View {
-        if let dice = game.displayDice {
-            VStack(spacing: 6) {
-                DiceView(value: dice, size: 56, isRolling: game.isRolling)
-                    .shadow(
-                        color: Color.black.opacity(0.2),
-                        radius: 8,
-                        y: 4
-                    )
+        // Feste Größe um Layout-Verschiebungen zu verhindern
+        ZStack {
+            if let dice = game.displayDice {
+                VStack(spacing: 4) {
+                    DiceView(value: dice, size: 56, isRolling: game.isRolling)
+                        .shadow(
+                            color: Color.black.opacity(0.2),
+                            radius: 8,
+                            y: 4
+                        )
 
-                if game.isPlayerTurn && !game.isRolling && game.currentDice != nil {
                     Text("Select column")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.green)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        .opacity(game.isPlayerTurn && !game.isRolling && game.currentDice != nil ? 1 : 0)
                 }
-            }
-            .animation(.spring(response: 0.3), value: game.currentDice != nil)
-        } else if game.isPlayerTurn {
-            Button(action: {
-                game.rollDice()
-            }) {
-                Text("Roll")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 14)
-                    .background {
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.blue, Color.blue.opacity(0.8)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
+            } else if game.isPlayerTurn {
+                Button(action: {
+                    game.rollDice()
+                }) {
+                    Text("Roll")
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 14)
+                        .background {
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.blue, Color.blue.opacity(0.8)],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
                                 )
-                            )
-                            .shadow(color: Color.blue.opacity(0.4), radius: 8, y: 4)
-                    }
+                                .shadow(color: Color.blue.opacity(0.4), radius: 8, y: 4)
+                        }
+                }
+                .disabled(game.isRolling)
+                .scaleEffect(game.isRolling ? 0.95 : 1.0)
+            } else {
+                // Platzhalter während Gegner-Zug
+                ProgressView()
+                    .scaleEffect(0.8)
             }
-            .disabled(game.isRolling)
-            .scaleEffect(game.isRolling ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3), value: game.isRolling)
-        } else {
-            // Platzhalter während Gegner-Zug
-            ProgressView()
-                .scaleEffect(0.8)
-                .frame(width: 56, height: 56)
         }
+        .frame(height: 76) // Feste Höhe für alle Zustände
+        .animation(.spring(response: 0.3), value: game.displayDice != nil)
+        .animation(.spring(response: 0.3), value: game.isRolling)
     }
 }
 
@@ -254,28 +255,27 @@ struct FooterSection: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            // Schwierigkeits-Auswahl (nur wenn Spiel nicht läuft)
-            if !gameInProgress {
-                VStack(spacing: 8) {
-                    Text("Difficulty")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
+            // Schwierigkeits-Auswahl (immer sichtbar, während Spiel deaktiviert)
+            VStack(spacing: 8) {
+                Text("Difficulty")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
 
-                    Picker("Difficulty", selection: $game.difficulty) {
-                        ForEach(AIDifficulty.allCases, id: \.self) { difficulty in
-                            Text(difficulty.rawValue).tag(difficulty)
-                        }
+                Picker("Difficulty", selection: $game.difficulty) {
+                    ForEach(AIDifficulty.allCases, id: \.self) { difficulty in
+                        Text(difficulty.rawValue).tag(difficulty)
                     }
-                    .pickerStyle(.segmented)
                 }
-                .padding(.horizontal, 8)
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                .pickerStyle(.segmented)
+                .disabled(gameInProgress)
+                .opacity(gameInProgress ? 0.5 : 1.0)
             }
+            .padding(.horizontal, 8)
+            .animation(.easeInOut(duration: 0.2), value: gameInProgress)
 
             // Regeln
             RulesFooter()
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: gameInProgress)
     }
 }
 
