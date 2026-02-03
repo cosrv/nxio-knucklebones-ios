@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var game = GameState()
+    @State private var showSettings = false
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -11,10 +12,24 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 20) {
-                // Titel
-                Text("Knucklebones")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
+                // Top Bar mit Settings
+                HStack {
+                    Spacer()
+
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.secondary)
+                            .padding(12)
+                            .background {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                            }
+                    }
+                }
+                .padding(.horizontal, 4)
 
                 Spacer()
 
@@ -34,7 +49,6 @@ struct ContentView: View {
 
                 // Center Area: Roll Button / Dice
                 CenterArea(game: game)
-                    .padding(.vertical, 8)
 
                 // Spieler-Bereich
                 PlayerSection(
@@ -57,12 +71,9 @@ struct ContentView: View {
                 }
 
                 Spacer()
-
-                // Footer mit Schwierigkeit und Regeln
-                FooterSection(game: game, gameInProgress: gameInProgress)
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 16)
+            .padding(.vertical, 8)
         }
         .overlay {
             if game.gameOver, let winner = game.winner {
@@ -85,6 +96,11 @@ struct ContentView: View {
                 game.performAITurn()
             }
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsSheet(game: game, isPresented: $showSettings)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
     }
 
     private var backgroundGradient: some View {
@@ -96,10 +112,150 @@ struct ContentView: View {
             endPoint: .bottomTrailing
         )
     }
+}
+
+// MARK: - Settings Sheet
+
+struct SettingsSheet: View {
+    @Bindable var game: GameState
+    @Binding var isPresented: Bool
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        NavigationStack {
+            List {
+                // Schwierigkeit
+                Section {
+                    ForEach(AIDifficulty.allCases, id: \.self) { difficulty in
+                        Button {
+                            if game.difficulty != difficulty {
+                                game.difficulty = difficulty
+                                withAnimation {
+                                    game.reset()
+                                }
+                            }
+                            isPresented = false
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(difficulty.rawValue)
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .foregroundStyle(.primary)
+
+                                    Text(difficultyDescription(difficulty))
+                                        .font(.system(size: 13, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Spacer()
+
+                                if game.difficulty == difficulty {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.green)
+                                        .font(.system(size: 20))
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                } header: {
+                    Text("Difficulty")
+                } footer: {
+                    Text("Changing difficulty will start a new game")
+                        .font(.system(size: 12, design: .rounded))
+                }
+
+                // Spiel-Aktionen
+                Section {
+                    Button {
+                        withAnimation {
+                            game.reset()
+                        }
+                        isPresented = false
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 16))
+                            Text("New Game")
+                                .font(.system(size: 16, weight: .medium, design: .rounded))
+                        }
+                        .foregroundStyle(.blue)
+                    }
+
+                    if gameInProgress {
+                        Button(role: .destructive) {
+                            withAnimation {
+                                game.reset()
+                            }
+                            isPresented = false
+                        } label: {
+                            HStack {
+                                Image(systemName: "flag.fill")
+                                    .font(.system(size: 16))
+                                Text("Give Up")
+                                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Game")
+                }
+
+                // Spielregeln
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        RuleRow(icon: "dice.fill", text: "Roll the dice and place it in a column")
+                        RuleRow(icon: "plus.circle.fill", text: "Matching dice in a column multiply their value")
+                        RuleRow(icon: "xmark.circle.fill", text: "Your dice remove opponent's matching dice in the same column")
+                        RuleRow(icon: "flag.checkered", text: "Game ends when any grid is full")
+                    }
+                    .padding(.vertical, 8)
+                } header: {
+                    Text("Rules")
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                }
+            }
+        }
+    }
 
     private var gameInProgress: Bool {
         !game.playerGrid.allSatisfy { $0.allSatisfy { $0 == nil } } ||
         !game.opponentGrid.allSatisfy { $0.allSatisfy { $0 == nil } }
+    }
+
+    private func difficultyDescription(_ difficulty: AIDifficulty) -> String {
+        switch difficulty {
+        case .easy: "Random moves"
+        case .medium: "Basic strategy"
+        case .hard: "Advanced tactics"
+        }
+    }
+}
+
+struct RuleRow: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundStyle(.secondary)
+                .frame(width: 24)
+
+            Text(text)
+                .font(.system(size: 14, design: .rounded))
+                .foregroundStyle(.primary)
+        }
     }
 }
 
@@ -196,7 +352,6 @@ struct CenterArea: View {
 
     @ViewBuilder
     private var centerContent: some View {
-        // Feste Größe um Layout-Verschiebungen zu verhindern
         ZStack {
             if let dice = game.displayDice {
                 VStack(spacing: 4) {
@@ -236,46 +391,13 @@ struct CenterArea: View {
                 .disabled(game.isRolling)
                 .scaleEffect(game.isRolling ? 0.95 : 1.0)
             } else {
-                // Platzhalter während Gegner-Zug
                 ProgressView()
                     .scaleEffect(0.8)
             }
         }
-        .frame(height: 76) // Feste Höhe für alle Zustände
+        .frame(height: 76)
         .animation(.spring(response: 0.3), value: game.displayDice != nil)
         .animation(.spring(response: 0.3), value: game.isRolling)
-    }
-}
-
-// MARK: - Footer Section
-
-struct FooterSection: View {
-    @Bindable var game: GameState
-    let gameInProgress: Bool
-
-    var body: some View {
-        VStack(spacing: 12) {
-            // Schwierigkeits-Auswahl (immer sichtbar, während Spiel deaktiviert)
-            VStack(spacing: 8) {
-                Text("Difficulty")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
-
-                Picker("Difficulty", selection: $game.difficulty) {
-                    ForEach(AIDifficulty.allCases, id: \.self) { difficulty in
-                        Text(difficulty.rawValue).tag(difficulty)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .disabled(gameInProgress)
-                .opacity(gameInProgress ? 0.5 : 1.0)
-            }
-            .padding(.horizontal, 8)
-            .animation(.easeInOut(duration: 0.2), value: gameInProgress)
-
-            // Regeln
-            RulesFooter()
-        }
     }
 }
 
@@ -291,24 +413,19 @@ struct GameOverOverlay: View {
 
     var body: some View {
         ZStack {
-            // Dimmed Background
             Color.black.opacity(0.4)
                 .ignoresSafeArea()
 
-            // Content Card
             VStack(spacing: 20) {
-                // Winner Icon
                 Image(systemName: winnerIcon)
                     .font(.system(size: 48))
                     .foregroundStyle(winnerColor)
                     .shadow(color: winnerColor.opacity(0.5), radius: 12)
 
-                // Winner Text
                 Text(winnerText)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
 
-                // Score
                 HStack(spacing: 16) {
                     ScoreDisplay(label: "You", score: playerScore, isWinner: winner == .player)
                     Text("–")
@@ -317,7 +434,6 @@ struct GameOverOverlay: View {
                     ScoreDisplay(label: "Opponent", score: opponentScore, isWinner: winner == .opponent)
                 }
 
-                // Play Again Button
                 Button(action: onPlayAgain) {
                     Text("Play Again")
                         .font(.system(size: 17, weight: .semibold, design: .rounded))
@@ -394,18 +510,6 @@ struct ScoreDisplay: View {
                 .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
         }
-    }
-}
-
-// MARK: - Rules Footer
-
-struct RulesFooter: View {
-    var body: some View {
-        Text("Place dice in columns. Matching dice multiply. Your dice remove opponent's matching dice.")
-            .font(.system(size: 11, weight: .regular, design: .rounded))
-            .foregroundStyle(.tertiary)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal)
     }
 }
 
