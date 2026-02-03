@@ -94,27 +94,45 @@ class GameState {
     func rollDice() {
         guard !isRolling && currentDice == nil && !gameOver else { return }
 
-        // Haptic Feedback beim Würfeln
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        // Haptic Feedback beim Start
+        let startImpact = UIImpactFeedbackGenerator(style: .medium)
+        startImpact.impactOccurred()
 
         isRolling = true
         let finalValue = Int.random(in: 1...6)
 
-        // Roll-Animation: Zufällige Werte anzeigen, dann finaler Wert
-        let iterations = Int.random(in: 8...12)
+        // Roll-Animation: Schnell am Anfang, langsamer am Ende (Easing)
+        let totalDuration: Double = 0.8
+        let iterations = 12
+        var delays: [Double] = []
 
+        // Easing-Funktion: Quadratisch langsamer werden
         for i in 0..<iterations {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.05) {
-                self.displayDice = Int.random(in: 1...6)
+            let progress = Double(i) / Double(iterations)
+            let easedProgress = progress * progress // Quadratisches Easing
+            delays.append(easedProgress * totalDuration)
+        }
+
+        // Zufällige Werte während der Animation
+        for (index, delay) in delays.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                // Letzter Wert ist der finale Wert
+                if index == iterations - 1 {
+                    self.displayDice = finalValue
+                } else {
+                    self.displayDice = Int.random(in: 1...6)
+                }
             }
         }
 
-        // Finaler Wert nach Animation
-        DispatchQueue.main.asyncAfter(deadline: .now() + Double(iterations) * 0.05 + 0.1) {
-            self.displayDice = finalValue
+        // Animation beenden
+        DispatchQueue.main.asyncAfter(deadline: .now() + totalDuration + 0.15) {
             self.currentDice = finalValue
             self.isRolling = false
+
+            // Haptic Feedback beim Landen
+            let landImpact = UIImpactFeedbackGenerator(style: .rigid)
+            landImpact.impactOccurred()
         }
     }
 
@@ -232,23 +250,34 @@ class GameState {
         isRolling = true
         let finalValue = Int.random(in: 1...6)
 
-        // Roll-Animation
-        let iterations = Int.random(in: 8...12)
+        // Roll-Animation: Schnell am Anfang, langsamer am Ende
+        let totalDuration: Double = 0.7
+        let iterations = 10
+        var delays: [Double] = []
 
         for i in 0..<iterations {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.05) {
-                self.displayDice = Int.random(in: 1...6)
+            let progress = Double(i) / Double(iterations)
+            let easedProgress = progress * progress
+            delays.append(easedProgress * totalDuration)
+        }
+
+        for (index, delay) in delays.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                if index == iterations - 1 {
+                    self.displayDice = finalValue
+                } else {
+                    self.displayDice = Int.random(in: 1...6)
+                }
             }
         }
 
-        // Finaler Wert und Platzierung
-        DispatchQueue.main.asyncAfter(deadline: .now() + Double(iterations) * 0.05 + 0.1) {
-            self.displayDice = finalValue
+        // Animation beenden und platzieren
+        DispatchQueue.main.asyncAfter(deadline: .now() + totalDuration + 0.15) {
             self.currentDice = finalValue
             self.isRolling = false
 
             // Verzögerung vor dem Platzieren
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self.placeAIDice(value: finalValue)
             }
         }

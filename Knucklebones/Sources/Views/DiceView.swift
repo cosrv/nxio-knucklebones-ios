@@ -6,6 +6,10 @@ struct DiceView: View {
     var isRolling: Bool = false
 
     @Environment(\.colorScheme) private var colorScheme
+    @State private var rotationX: Double = 0
+    @State private var rotationY: Double = 0
+    @State private var rotationZ: Double = 0
+    @State private var bounce: CGFloat = 1.0
 
     // Dot-Positionen für Werte 1-6 im 3x3 Grid
     private let dotPositions: [Int: [(Int, Int)]] = [
@@ -42,8 +46,8 @@ struct DiceView: View {
                     color: colorScheme == .dark
                         ? Color.black.opacity(0.5)
                         : Color.black.opacity(0.15),
-                    radius: size * 0.1,
-                    y: size * 0.05
+                    radius: isRolling ? size * 0.2 : size * 0.1,
+                    y: isRolling ? size * 0.1 : size * 0.05
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: size * 0.15)
@@ -90,20 +94,62 @@ struct DiceView: View {
                 }
             }
             .padding(size * 0.15)
+            .opacity(isRolling ? 0.7 : 1.0)
         }
         .frame(width: size, height: size)
-        .rotation3DEffect(
-            .degrees(isRolling ? Double(value * 45) : 0),
-            axis: (x: 1, y: 1, z: 0)
-        )
-        .scaleEffect(isRolling ? 0.9 : 1.0)
-        .animation(
-            isRolling
-                ? .easeInOut(duration: 0.08)
-                : .spring(response: 0.3, dampingFraction: 0.6),
-            value: isRolling
-        )
-        .animation(.spring(response: 0.2, dampingFraction: 0.7), value: value)
+        .scaleEffect(bounce)
+        .rotation3DEffect(.degrees(rotationX), axis: (x: 1, y: 0, z: 0))
+        .rotation3DEffect(.degrees(rotationY), axis: (x: 0, y: 1, z: 0))
+        .rotation3DEffect(.degrees(rotationZ), axis: (x: 0, y: 0, z: 1))
+        .onChange(of: isRolling) { _, rolling in
+            if rolling {
+                startRollingAnimation()
+            } else {
+                stopRollingAnimation()
+            }
+        }
+        .onChange(of: value) { _, _ in
+            // Kleiner Bounce wenn sich der Wert ändert
+            if !isRolling {
+                withAnimation(.spring(response: 0.15, dampingFraction: 0.5)) {
+                    bounce = 1.1
+                }
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.6).delay(0.1)) {
+                    bounce = 1.0
+                }
+            }
+        }
+    }
+
+    private func startRollingAnimation() {
+        // Kontinuierliche Tumbling-Animation
+        withAnimation(.linear(duration: 0.15).repeatForever(autoreverses: false)) {
+            rotationX = 360
+            rotationY = 360
+        }
+        withAnimation(.linear(duration: 0.2).repeatForever(autoreverses: false)) {
+            rotationZ = 360
+        }
+        // Leichtes Hüpfen
+        withAnimation(.easeInOut(duration: 0.1).repeatForever(autoreverses: true)) {
+            bounce = 0.92
+        }
+    }
+
+    private func stopRollingAnimation() {
+        // Sanft zurück zur Ausgangsposition
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+            rotationX = 0
+            rotationY = 0
+            rotationZ = 0
+        }
+        // Bounce-Landung
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.4)) {
+            bounce = 1.15
+        }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.5).delay(0.15)) {
+            bounce = 1.0
+        }
     }
 
     private func shouldShowDot(row: Int, col: Int) -> Bool {
